@@ -7,6 +7,7 @@ from exp.exp_imputation import Exp_Imputation
 from exp.exp_short_term_forecasting import Exp_Short_Term_Forecast
 from exp.exp_anomaly_detection import Exp_Anomaly_Detection
 from exp.exp_classification import Exp_Classification
+from exp.exp_stock_classification import Exp_Stock_Classification
 from utils.print_args import print_args
 import random
 import numpy as np
@@ -37,6 +38,12 @@ if __name__ == '__main__':
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
+    parser.add_argument('--train_file', type=str, default='train.parquet', help='training data file')
+    parser.add_argument('--val_file', type=str, default='val.parquet', help='validation data file')
+    parser.add_argument('--test_file', type=str, default='test.parquet', help='test data file')
+    parser.add_argument('--label_column', type=str, default='label', help='label column name')
+    parser.add_argument('--group_column', type=str, default='stock_id', help='group column name')
+    parser.add_argument('--datetime_column', type=str, default='datetime', help='datetime column name')
 
     # forecasting task
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -56,7 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--d_conv', type=int, default=4, help='conv kernel size for Mamba')
     parser.add_argument('--top_k', type=int, default=5, help='for TimesBlock')
     parser.add_argument('--num_kernels', type=int, default=6, help='for Inception')
-    parser.add_argument('--enc_in', type=int, default=7, help='encoder input size')
+    parser.add_argument('--enc_in', type=int, default=None, help='encoder input size. For stock data, it will be auto-detected if not provided.')
     parser.add_argument('--dec_in', type=int, default=7, help='decoder input size')
     parser.add_argument('--c_out', type=int, default=7, help='output size')
     parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
@@ -141,6 +148,28 @@ if __name__ == '__main__':
     parser.add_argument('--patch_len', type=int, default=16, help='patch length')
 
     args = parser.parse_args()
+
+    # Auto-detect enc_in for stock data if not provided
+    if args.data == 'stock' and args.enc_in is None:
+        try:
+            import pyarrow.parquet as pq
+            import os
+            train_file_path = os.path.join(args.root_path, args.train_file)
+            if not os.path.exists(train_file_path):
+                raise FileNotFoundError(f"Train file not found at {train_file_path}")
+            schema = pq.read_schema(train_file_path)
+            all_cols = schema.names
+            feature_cols = [col for col in all_cols if col not in [args.group_column, args.datetime_column, args.label_column]]
+            args.enc_in = len(feature_cols)
+            print(f"Automatically determined number of features (enc_in): {args.enc_in}")
+        except Exception as e:
+            print(f"Error: Could not automatically determine number of features for stock data. Please specify it using the --enc_in argument. Details: {e}")
+            exit(1)
+
+    # For other datasets, if enc_in is not provided, use a default to maintain compatibility.
+    if args.enc_in is None:
+        args.enc_in = 7
+
     if torch.cuda.is_available() and args.use_gpu:
         args.device = torch.device('cuda:{}'.format(args.gpu))
         print('Using GPU')
@@ -160,7 +189,9 @@ if __name__ == '__main__':
     print('Args in experiment:')
     print_args(args)
 
-    if args.task_name == 'long_term_forecast':
+    if args.task_name == 'classification' and args.data == 'stock':
+        Exp = Exp_Stock_Classification
+    elif args.task_name == 'long_term_forecast':
         Exp = Exp_Long_Term_Forecast
     elif args.task_name == 'short_term_forecast':
         Exp = Exp_Short_Term_Forecast
