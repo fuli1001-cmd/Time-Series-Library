@@ -44,11 +44,6 @@ class Exp_Stock_Classification(Exp_Basic):
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(vali_loader):
-                batch_x = batch_x.float().to(self.device)
-                batch_y = batch_y.to(self.device)
-                batch_x_mark = batch_x_mark.float().to(self.device)
-                batch_y_mark = batch_y_mark.float().to(self.device)
-
                 outputs = self.model(batch_x, batch_x_mark, None, None)
                 loss = criterion(outputs, batch_y)
                 total_loss.append(loss.item())
@@ -91,11 +86,6 @@ class Exp_Stock_Classification(Exp_Basic):
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
                 iter_count += 1
                 model_optim.zero_grad()
-
-                batch_x = batch_x.float().to(self.device)
-                batch_y = batch_y.to(self.device)
-                batch_x_mark = batch_x_mark.float().to(self.device)
-                batch_y_mark = batch_y_mark.float().to(self.device)
 
                 outputs = self.model(batch_x, batch_x_mark, None, None)
                 
@@ -143,11 +133,6 @@ class Exp_Stock_Classification(Exp_Basic):
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
-                batch_x = batch_x.float().to(self.device)
-                batch_y = batch_y.to(self.device)
-                batch_x_mark = batch_x_mark.float().to(self.device)
-                batch_y_mark = batch_y_mark.float().to(self.device)
-
                 outputs = self.model(batch_x, batch_x_mark, None, None)
                 preds.append(outputs.detach())
                 trues.append(batch_y)

@@ -34,9 +34,9 @@ python -u run.py \
   --d_model 32 \
   --d_ff 128 \
   --top_k 3 \
-  --batch_size 32 \
+  --batch_size 512 \
   --learning_rate 0.001 \
-  --train_epochs 10 \
+  --train_epochs 500 \
   --patience 10 \
   --des 'Stock_Exp' \
   --itr 1
