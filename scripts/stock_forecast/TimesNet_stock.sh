@@ -30,15 +30,13 @@ python -u run.py \
   --c_out 2 \
   --use_gpu True \
   --gpu 0 \
-  # --use_multi_gpu \
-  # --devices 0,1,2,3 \
   --e_layers 3 \
   --d_model 32 \
   --d_ff 128 \
   --top_k 3 \
-  --batch_size 512 \
+  --batch_size 32 \
   --learning_rate 0.001 \
-  --train_epochs 500 \
+  --train_epochs 10 \
   --patience 10 \
   --des 'Stock_Exp' \
   --itr 1

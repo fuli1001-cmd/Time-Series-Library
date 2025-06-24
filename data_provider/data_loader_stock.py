@@ -81,12 +81,11 @@ class Dataset_Stock(Dataset):
                 data_y_list.append(labels[i + self.seq_len - 1])
                 data_stamp_list.append(data_stamp[i:i + self.seq_len])
 
-        # 6. Pre-construct tensors for efficiency and move to target device
-        device = self.args.device
-        self.data_x = torch.tensor(np.array(data_x_list), dtype=torch.float32).to(device)
+        # 6. Pre-construct tensors for efficiency
+        self.data_x = torch.tensor(np.array(data_x_list), dtype=torch.float32)
         # 5. Use torch.long for classification labels and squeeze the last dimension
-        self.data_y = torch.tensor(np.array(data_y_list), dtype=torch.long).squeeze(-1).to(device)
-        self.data_stamp = torch.tensor(np.array(data_stamp_list), dtype=torch.float32).to(device)
+        self.data_y = torch.tensor(np.array(data_y_list), dtype=torch.long).squeeze(-1)
+        self.data_stamp = torch.tensor(np.array(data_stamp_list), dtype=torch.float32)
 
 
     def __getitem__(self, index):
