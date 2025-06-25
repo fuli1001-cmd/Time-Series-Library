@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from torch import optim
 import os
+import time
 from sklearn.metrics import precision_score, roc_auc_score, mean_squared_error, mean_absolute_error, r2_score # Added r2_score
 import warnings
 import numpy as np
@@ -93,6 +94,7 @@ class Exp_Stock_Classification(Exp_Classification):
         criterion = self._select_criterion()
 
         for epoch in range(self.args.train_epochs):
+            print(f"{time.time()}, training {epoch + 1}")
             train_loss = []
 
             self.model.train()
@@ -111,7 +113,7 @@ class Exp_Stock_Classification(Exp_Classification):
             train_loss = np.average(train_loss)
             val_loss, precision, auc_score_val, precision_at_k = self.vali(None, vali_loader, criterion)
 
-            print(f"epoch: {epoch + 1}, train Loss: {train_loss:.3f}, val Loss: {val_loss:.3f}, precision: {precision:.3f}, precision@5: {precision_at_k:.3f}, auc: {auc_score_val:.3f}")
+            print(f"{time.time()}, train Loss: {train_loss:.3f}, val Loss: {val_loss:.3f}, precision: {precision:.3f}, precision@5: {precision_at_k:.3f}, auc: {auc_score_val:.3f}")
             early_stopping(-precision, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
