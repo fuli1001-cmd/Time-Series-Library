@@ -48,6 +48,7 @@ def data_provider(args, flag):
         return data_set, data_loader
     elif args.task_name == 'classification':
         drop_last = False
+        collate_function = None if args.data == 'stock' else lambda x: collate_fn(x, max_len=args.seq_len)
         data_set = Data(
             args = args,
             root_path=args.root_path,
@@ -60,7 +61,7 @@ def data_provider(args, flag):
             shuffle=shuffle_flag,
             num_workers=args.num_workers,
             drop_last=drop_last,
-            collate_fn=lambda x: collate_fn(x, max_len=args.seq_len)
+            collate_fn=collate_function
         )
         return data_set, data_loader
     else:

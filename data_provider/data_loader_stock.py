@@ -5,7 +5,6 @@ import torch
 from torch.utils.data import Dataset
 from utils.timefeatures import time_features
 from joblib import Parallel, delayed
-from utils.device import try_gpu
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -45,8 +44,7 @@ class Dataset_Stock(Dataset):
         self.__read_data__()
 
     def __read_data__(self):
-        device = try_gpu()
-        print(f"using {device}")
+        print(f"using {self.args.device}")
 
         if self.set_type == 0:
             file_path = os.path.join(self.root_path, self.train_file)
@@ -61,34 +59,15 @@ class Dataset_Stock(Dataset):
         df.sort_values(by=[self.group_column, self.datetime_column], inplace=True)
         df.reset_index(drop=True, inplace=True) # Reset index after sorting to get contiguous indices
 
-        # 2. Create full tensors for features, labels, and timestamps
+        # 2. Create full tensors for features, labels, and padding_masks
         feature_cols = [col for col in df.columns if col not in [self.group_column, self.datetime_column, self.label_column]]
-        feature_tensor = torch.tensor(df[feature_cols].values, dtype=torch.float32, device=device)
-        label_tensor = torch.tensor(df[self.label_column].values, dtype=torch.long, device=device)
-
-        # # Create timestamp features
-        # df_stamp = df[[self.datetime_column]]
-        # if self.timeenc == 1:
-        #     data_stamp = time_features(pd.to_datetime(df_stamp[self.datetime_column].values), freq=self.freq)
-        #     data_stamp = data_stamp.transpose(1, 0)
-        # else:
-        #     time_stamps = pd.to_datetime(df_stamp[self.datetime_column].values)
-        #     df_stamp['month'] = time_stamps.month
-        #     df_stamp['day'] = time_stamps.day
-        #     df_stamp['weekday'] = time_stamps.weekday
-        #     df_stamp['hour'] = time_stamps.hour
-        #     data_stamp = df_stamp.drop(columns=[self.datetime_column]).values
-        
-        # stamp_tensor = torch.tensor(data_stamp, dtype=torch.float32, device=device)
+        feature_tensor = torch.tensor(df[feature_cols].values, dtype=torch.float32, device=self.args.device)
+        label_tensor = torch.tensor(df[self.label_column].values, dtype=torch.long, device=self.args.device)
 
         self.samples = []
         for start_idx, end_idx in self._build_indices_parallel(df):
             x = feature_tensor[start_idx : end_idx + 1]
             y = label_tensor[end_idx]
-            # x_mark = stamp_tensor[start_idx : end_idx + 1]
-            # # For classification, pred_len and label_len are 0, so seq_y_mark is a dummy tensor.
-            # y_mark = torch.zeros((0, stamp_tensor.shape[-1]), dtype=torch.float32, device=device)
-            # self.samples.append((x, y, x_mark, y_mark))
             self.samples.append((x, y))
 
         print(f"feature shape: {feature_tensor.shape}, size: {feature_tensor.element_size() * feature_tensor.nelement() / 1024**2} MB")
