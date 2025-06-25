@@ -40,4 +40,5 @@ python -u run.py \
   --patience 10 \
   --des 'Stock_Exp' \
   --itr 1 \
-  --num_workers 0
+  --num_workers 0 \
+  --freq 'd'
