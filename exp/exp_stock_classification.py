@@ -108,7 +108,6 @@ class Exp_Stock_Classification(Exp_Classification):
                 padding_mask = self.get_padding_mask(batch_size)
                 outputs = self.model(batch_x, padding_mask, None, None)
                 loss = criterion(outputs, label.long())
-                train_loss.append(loss.item())
                 total_loss += loss * batch_size
                 total += batch_size
 
