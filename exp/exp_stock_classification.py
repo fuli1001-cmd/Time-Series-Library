@@ -102,7 +102,7 @@ class Exp_Stock_Classification(Exp_Classification):
                 model_optim.zero_grad()
 
                 outputs = self.model(batch_x, self.padding_mask, None, None)
-                loss = criterion(outputs, label.long().squeeze(-1))
+                loss = criterion(outputs, label.long())
                 train_loss.append(loss.item())
 
                 loss.backward()
