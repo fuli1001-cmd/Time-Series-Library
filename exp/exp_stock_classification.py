@@ -33,7 +33,8 @@ class Exp_Stock_Classification(Exp_Classification):
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, label) in enumerate(vali_loader):
-                outputs = self.model(batch_x, self.padding_mask, None, None)
+                padding_mask = self.get_padding_mask(batch_x.shape[0])
+                outputs = self.model(batch_x, padding_mask, None, None)
 
                 loss = criterion(outputs, label.long().squeeze())
                 total_loss.append(loss)
@@ -92,16 +93,14 @@ class Exp_Stock_Classification(Exp_Classification):
         criterion = self._select_criterion()
 
         for epoch in range(self.args.train_epochs):
-            iter_count = 0
             train_loss = []
 
             self.model.train()
 
             for i, (batch_x, label) in enumerate(train_loader):
-                iter_count += 1
                 model_optim.zero_grad()
-
-                outputs = self.model(batch_x, self.padding_mask, None, None)
+                padding_mask = self.get_padding_mask(batch_x.shape[0])
+                outputs = self.model(batch_x, padding_mask, None, None)
                 loss = criterion(outputs, label.long())
                 train_loss.append(loss.item())
 
@@ -122,3 +121,10 @@ class Exp_Stock_Classification(Exp_Classification):
         self.model.load_state_dict(torch.load(best_model_path))
 
         return self.model
+
+    def get_padding_mask(self, batch_size):
+        if self.padding_mask.shape[0] != batch_size:
+            padding_mask = torch.ones(batch_size, self.padding_mask.shape[1], device=self.padding_mask.device)
+        else:
+            padding_mask = self.padding_mask
+        return padding_mask
