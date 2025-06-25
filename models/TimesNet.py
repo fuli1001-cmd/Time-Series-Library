@@ -191,7 +191,6 @@ class Model(nn.Module):
         # the output transformer encoder/decoder embeddings don't include non-linearity
         output = self.act(enc_out)
         output = self.dropout(output)
-        print(f"output shape: {output.shape}, x_mark_enc shape: {x_mark_enc.shape}")
         # zero-out padding embeddings
         output = output * x_mark_enc.unsqueeze(-1)
         # (batch_size, seq_length * d_model)
