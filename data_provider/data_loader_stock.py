@@ -87,7 +87,7 @@ class Dataset_Stock(Dataset):
             y = label_tensor[end_idx]
             x_mark = stamp_tensor[start_idx : end_idx + 1]
             # For classification, pred_len and label_len are 0, so seq_y_mark is a dummy tensor.
-            y_mark = torch.zeros((0, stamp_tensor.shape[-1]), dtype=torch.float32)
+            y_mark = torch.zeros((0, stamp_tensor.shape[-1]), dtype=torch.float32, device=device)
             self.samples.append((x, y, x_mark, y_mark))
 
         print(f"feature shape: {feature_tensor.shape}, size: {feature_tensor.element_size() * feature_tensor.nelement() / 1024**2} MB")
