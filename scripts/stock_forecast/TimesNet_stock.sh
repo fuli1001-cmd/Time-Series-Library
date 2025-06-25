@@ -39,4 +39,5 @@ python -u run.py \
   --train_epochs 500 \
   --patience 10 \
   --des 'Stock_Exp' \
-  --itr 1
+  --itr 1 \
+  --num_workers 0
