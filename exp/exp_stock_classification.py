@@ -28,22 +28,24 @@ class Exp_Stock_Classification(Exp_Classification):
         return model
     
     def vali(self, vali_data, vali_loader, criterion):
-        total_loss = []
+        total_loss, total = 0.0, 0
         all_outputs = []
         all_labels = []
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, label) in enumerate(vali_loader):
-                padding_mask = self.get_padding_mask(batch_x.shape[0])
+                batch_size = batch_x.shape[0]
+                padding_mask = self.get_padding_mask(batch_size)
                 outputs = self.model(batch_x, padding_mask, None, None)
 
                 loss = criterion(outputs, label.long().squeeze())
-                total_loss.append(loss)
+                total_loss += loss * batch_size
+                total += batch_size
 
                 all_outputs.append(outputs.detach())
                 all_labels.append(label)
 
-        avg_loss = np.average(total_loss)
+        val_loss = (total_loss / total).item() if total > 0 else float('nan')
         all_labels = torch.cat(all_labels, dim=0).cpu().numpy()
         all_outputs = torch.cat(all_outputs, dim=0)
         all_preds = all_outputs.argmax(1).cpu().numpy()
@@ -78,7 +80,7 @@ class Exp_Stock_Classification(Exp_Classification):
                         precision_at_k = topk_labels.float().mean().item()
 
         self.model.train()
-        return avg_loss, precision, auc_score_val, precision_at_k
+        return val_loss, precision, auc_score_val, precision_at_k
 
     def train(self, setting):
         _, train_loader = self._get_data(flag='train')
@@ -94,26 +96,31 @@ class Exp_Stock_Classification(Exp_Classification):
         criterion = self._select_criterion()
 
         for epoch in range(self.args.train_epochs):
-            print(f"{time.time()}, training {epoch + 1}")
-            train_loss = []
+            print(f"---- epoch {epoch + 1} ----")
+            start_time = time.time()
+            total_loss, total = 0.0, 0
 
             self.model.train()
 
             for i, (batch_x, label) in enumerate(train_loader):
                 model_optim.zero_grad()
-                padding_mask = self.get_padding_mask(batch_x.shape[0])
+                batch_size = batch_x.shape[0]
+                padding_mask = self.get_padding_mask(batch_size)
                 outputs = self.model(batch_x, padding_mask, None, None)
                 loss = criterion(outputs, label.long())
                 train_loss.append(loss.item())
+                total_loss += loss * batch_size
+                total += batch_size
 
                 loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=4.0)
                 model_optim.step()
 
-            train_loss = np.average(train_loss)
+            train_loss = (total_loss / total).item() if total > 0 else float('nan')
             val_loss, precision, auc_score_val, precision_at_k = self.vali(None, vali_loader, criterion)
 
-            print(f"{time.time()}, train Loss: {train_loss:.3f}, val Loss: {val_loss:.3f}, precision: {precision:.3f}, precision@5: {precision_at_k:.3f}, auc: {auc_score_val:.3f}")
+            mins = (time.time() - start_time) / 60
+            print(f"used {mins} mins, train Loss: {train_loss:.3f}, val Loss: {val_loss:.3f}, precision: {precision:.3f}, precision@5: {precision_at_k:.3f}, auc: {auc_score_val:.3f}")
             early_stopping(-precision, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
