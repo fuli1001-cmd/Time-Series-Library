@@ -732,7 +732,7 @@ class UEAloader(Dataset):
     def __getitem__(self, ind):
         batch_x = self.feature_df.loc[self.all_IDs[ind]].values
         labels = self.labels_df.loc[self.all_IDs[ind]].values
-        if self.flag == "TRAIN" and self.args.augmentation_ratio > 0:
+        if self.flag == "train" and self.args.augmentation_ratio > 0:
             num_samples = len(self.all_IDs)
             num_columns = self.feature_df.shape[1]
             seq_len = int(self.feature_df.shape[0] / num_samples)
