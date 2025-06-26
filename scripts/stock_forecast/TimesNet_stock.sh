@@ -41,4 +41,6 @@ python -u run.py \
   --des 'Stock_Exp' \
   --itr 1 \
   --num_workers 0 \
-  --freq 'd'
+  --freq 'd' \
+  --dropout 0.3 \
+  --use_amp True
