@@ -13,7 +13,7 @@ seq_len=96
 python -u run.py \
   --task_name classification \
   --is_training 1 \
-  --root_path /kaggle/input/binary/ \
+  --root_path /data/binary/ \
   --model_id stock_$seq_len \
   --model $model_name \
   --data stock \
