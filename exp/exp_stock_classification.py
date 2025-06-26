@@ -120,7 +120,7 @@ class Exp_Stock_Classification(Exp_Classification):
 
             mins = (time.time() - start_time) / 60
             print(f"used {mins} mins, train Loss: {train_loss:.3f}, val Loss: {val_loss:.3f}, precision: {precision:.3f}, precision@5: {precision_at_k:.3f}, auc: {auc_score_val:.3f}")
-            early_stopping(-precision, self.model, path)
+            early_stopping(val_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
